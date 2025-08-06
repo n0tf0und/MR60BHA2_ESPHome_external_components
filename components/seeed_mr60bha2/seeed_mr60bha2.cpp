@@ -185,17 +185,19 @@ void MR60BHA2Component::process_frame_(uint16_t frame_id, uint16_t frame_type, c
       }
       break;
     case DISTANCE_TYPE_BUFFER:
-      if (data[0] != 0) {
-        if (this->distance_sensor_ != nullptr && length >= 8) {
-          uint32_t current_distance_int = encode_uint32(data[7], data[6], data[5], data[4]);
-          float distance_float;
-          memcpy(&distance_float, &current_distance_int, sizeof(float));
-          if (this->distance_sensor_->state == distance_float) {
-            break;
-          }
-          this->distance_sensor_->publish_state(distance_float);
+      if (this->distance_sensor_ != nullptr && length >= 8) {
+        ESP_LOGD(TAG, "DISTANCE frame data: %s", format_hex_pretty(data, length).c_str());
+
+        uint32_t current_distance_int = encode_uint32(data[7], data[6], data[5], data[4]);
+        float distance_float;
+        memcpy(&distance_float, &current_distance_int, sizeof(float));
+
+        ESP_LOGD(TAG, "Decoded distance: %.2f", distance_float);
+
+        if (this->distance_sensor_->state != distance_float) {
+        this->distance_sensor_->publish_state(distance_float);
         }
-      }
+      }      
       break;
     case PRINT_CLOUD_BUFFER:
       if (this->num_targets_sensor_ != nullptr && length >= 4) {
